@@ -37,7 +37,7 @@ class User extends Authenticatable
 
     public function urls()
     {
-        return $this->hasMany(Url::class);
+        return $this->hasMany(URL::class);
     }
 
     public function invitations()

@@ -17,7 +17,7 @@ class Company extends Model
 
     public function urls()
     {
-        return $this->hasMany(Url::class);
+        return $this->hasMany(URL::class);
     }
 
 }

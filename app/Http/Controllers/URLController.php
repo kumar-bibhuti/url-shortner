@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\URL;
+use App\Models\{URL, Company, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 class URLController extends Controller
@@ -16,14 +16,37 @@ class URLController extends Controller
             return view('welcome');
         }
         $user = auth()->user();
+        $members = null;
+        
+        $companies = collect();
+        $stats = [];
         if($user->role === 'super_admin') {
-            $urls = URL::all();
+            $urls = URL::paginate(2);
+            $companies = Company::withCount('users', 'urls')->get();
+
         } elseif($user->role === 'admin') {
-            $urls = URL::where('company_id', $user->company_id)->get();
+            $urls = URL::where('company_id', $user->company_id)->paginate(2);
+            $company = $user->company;
+            $companyUsers = User::where('company_id', $user->company_id)->count();
+            $companyUrls = URL::where('company_id', $user->company_id)->count();
+            
+            $members = User::where('company_id', $user->company_id)
+                ->withCount('urls')
+                ->get();
+            
+            $stats = [
+                'company_name' => $company->name,
+                'users' => $companyUsers,
+                'urls' => $companyUrls,
+            ];
         } else {
-            $urls = URL::where('user_id', $user->id)->get();
+            $urls = URL::where('user_id', $user->id)->paginate(2);
+            $userUrls = URL::where('user_id', $user->id)->count();
+            $stats = [
+                'urls' => $userUrls,
+            ];
         }
-        return view('urls.index', compact('urls'));
+        return view('urls.index', compact('urls', 'stats', 'members', 'companies'));
     }
 
     /**
